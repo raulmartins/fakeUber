@@ -14,7 +14,7 @@ export default class Search extends Component {
     const { searchFocused } = this.state
     return <GooglePlacesAutocomplete
       placeholder='Para onde...?'
-      placeholderTextColor='#333'
+      placeholderTextColor='#888'
       onPress={onLocationSelected}
       query={
         {

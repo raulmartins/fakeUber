@@ -19,6 +19,12 @@ import {
 } from './styles'
 
 Geocoder.init(apikey)
+
+const config = {
+  timeout: 5000,
+  enableHighAccuracy: true,
+  maximumAge: 1000
+}
 export default class Map extends Component {
   state = {
     region: null,
@@ -27,30 +33,30 @@ export default class Map extends Component {
     location: null
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     navigator.geolocation.getCurrentPosition(
-      async ({ coords: { latitude, longitude, duration } }) => {
+      async ({ coords: { latitude, longitude } }) => {
         const response = await Geocoder.from({ latitude, longitude })
         const address = response.results[0].formatted_address
         const location = address.substring(0, address.indexOf(','))
         this.setState({
+          location,
           region: {
             latitude,
             longitude,
             latitudeDelta: 0.0143,
             longitudeDelta: 0.0134
-          },
-          duration,
-          location
+          }
+
         })
       },
-      () => { }, // erro
-      {
-        timeout: 2000,
-        enableHighAccuracy: true,
-        maximumAge: 1000
-      }
+      this.error,
+      config
     )
+  }
+
+  error = (err) => {
+    console.warn(`ERROR(${err.code}): ${err.message}`);
   }
 
   handleLocationSelected = (data, { geometry }) => {
@@ -63,9 +69,10 @@ export default class Map extends Component {
         title: data.structured_formatting.main_text
       }
     })
+    console.log('selecionado o endereco', this.state)
   }
   handleBack = () => {
-    this.setState({destination:null})
+    this.setState({ destination: null })
   }
 
   render() {
@@ -85,8 +92,7 @@ export default class Map extends Component {
                 origin={region}
                 destination={destination}
                 onReady={result => {
-                  this.setState({ duration: Math.floor(result.duration) });
-
+                  this.setState({ duration: Math.floor(result.duration) })
                   this.mapView.fitToCoordinates(result.coordinates, {
                     edgePadding: {
                       right: getPixelSize(50),
@@ -125,9 +131,7 @@ export default class Map extends Component {
               <Image source={backImage}></Image>
             </Back>
             <Details />
-          </Fragment>
-          :
-          <Search onLocationSelected={this.handleLocationSelected} />}
+          </Fragment> : <Search onLocationSelected={this.handleLocationSelected} />}
       </View>
     )
   }
